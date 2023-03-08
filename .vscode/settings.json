@@ -1,0 +1,19 @@
+// place your settings in this file to overwrite default and user settings.
+{
+	"jest.jestCommandLine": "node_modules\\.bin\\jest"
+	"files.exclude": {
+		"**/.DS_Store": true,
+		"**/.git": true,
+		"**/.vscode": true,
+		"**/*.js": {
+			"when": "$(basename).ts"
+		},
+		"**/*.js.map": true,
+		"**/dist": true
+	},
+	"eslint.alwaysShowStatus": true,
+	"tslint.alwaysShowStatus": false,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
+}

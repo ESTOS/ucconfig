@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"javascript.preferences.quoteStyle": "double",
+		"typescript.preferences.quoteStyle": "double",
+		"editor.tabCompletion": "on",
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": true
+		}
+	}
+}

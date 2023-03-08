@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+.vs/
+
+dist/tsconfig.tsbuildinfo
+/.husky/.gitignore
+
+.eslintcache
+*.bak
