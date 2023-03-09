@@ -1,6 +1,7 @@
 import { URL } from "url";
 
 export type Environment = "development" | "staging" | "production";
+export type LogLevels = "error" | "warn" | "info" | "debug";
 
 export interface ICoreConfig {
 	// [ENV_PREFIX]_VERSION_BUILD_DATE

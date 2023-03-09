@@ -1,6 +1,6 @@
 {
 	"name": "ucconfig",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Environment based config support library",
 	"main": "index.js",
 	"engines": {
