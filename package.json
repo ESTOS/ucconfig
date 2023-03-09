@@ -3,6 +3,10 @@
 	"version": "0.0.1",
 	"description": "Environment based config support library",
 	"main": "index.js",
+	"engines": {
+		"node": ">=18.0.0",
+		"npm": ">=9.0.0"
+	},
 	"scripts": {
 		"check": "npx madge --circular --extensions ts --exclude \"\\.d\\.ts$|globals|dist\" ./",
 		"clean": "npx rimraf dist",
