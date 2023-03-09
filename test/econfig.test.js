@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const EConfigTemplate = require("../lib/econfig").EConfigTemplate;
+const { EConfigPropertyOptional } = require("../lib/econfig");
 const validators = require("../lib/validators");
 
 let config = null;
@@ -20,6 +21,87 @@ class Config extends EConfigTemplate {
 	}
 }
 
+/**
+ * Test Config for the replacing test
+ */
+class TestConfigReplacing extends EConfigTemplate {
+	constructor() {
+		super("TEST", true);
+		this.config = {
+			testEnvReplace: undefined,
+			testEnvReplaceFailed: undefined
+		};
+	}
+
+	init() {
+		this.initCore();
+		this.config = {
+			testEnvReplace1: this.newEnvProperty("ENVIRONMENT_REPLACE", validators.validateStringNotEmpty()),
+			testEnvReplace2: this.newEnvProperty("ENVIRONMENT_REPLACE", validators.validateStringNotEmpty(), undefined, true),
+			testEnvReplaceFailed1: this.newEnvProperty("ENVIRONMENT_REPLACE_FAILED", validators.validateStringNotEmpty()),
+			testEnvReplaceFailed2: this.newEnvProperty("ENVIRONMENT_REPLACE_FAILED", validators.validateStringNotEmpty(), undefined, true)
+		};
+	}
+}
+
+/**
+ * Test Config for the required and optional test
+ */
+class TestConfigRequiredOptional extends EConfigTemplate {
+	constructor() {
+		super("TEST", true);
+		this.config = {
+			testValidUrl: undefined,
+			testInvalidUrl: undefined,
+			testRequiredMissing: undefined,
+			testRequiredFallback: undefined,
+			testOptional: undefined,
+			testOptionalFallback: undefined
+		};
+	}
+
+	init() {
+		this.initCore();
+		this.config = {
+			testValidUrl: this.newProperty("URL_VALID", validators.validateURL()),
+			testInvalidUrl: this.newProperty("URL_INVALID", validators.validateURL()),
+			testRequiredMissing: this.newProperty("REQUIRED_MISSING", validators.validateString()),
+			testRequiredFallback: this.newProperty("REQUIRED_MISSING_W_FALLBACK", validators.validateString(), "FALLBACK_REQUIRED")
+		};
+	}
+}
+
+/**
+ * Test Config for the environment specific optional test
+ */
+class TestConfigProductionOptional extends EConfigTemplate {
+	constructor() {
+		super("TEST", true);
+	}
+	init() {
+		this.initCore();
+		this.config = {
+			parameter: this.newProperty("PARAMETER", validators.validateBoolean(), EConfigPropertyOptional.production)
+		};
+	}
+}
+
+/**
+ * Test Config for the environment specific optional test
+ */
+class TestConfigLocalDevelopmentOptional extends EConfigTemplate {
+	constructor() {
+		super("TEST", true);
+	}
+	init() {
+		this.initCore();
+		this.config = {
+			parameter: this.newProperty("PARAMETER", validators.validateBoolean(), EConfigPropertyOptional.local_development)
+		};
+	}
+}
+
+
 const TEST_ENVS = {
 	VERSION_BUILD_DATE: (envPrefix) => `${envPrefix}_VERSION_BUILD_DATE`,
 	VERSION_TAG: (envPrefix) => `${envPrefix}_VERSION_TAG`,
@@ -38,10 +120,13 @@ const setValidCore = function(envPrefix) {
 	process.env[`${envPrefix}_ENVIRONMENT`] = "production";
 	process.env[`${envPrefix}_LOG_LEVEL`] = "debug";
 	process.env[`${envPrefix}_LOG_TO_CONSOLE`] = "1";
+	process.env[`${envPrefix}_DEVELOPMENT`] = "0";
 };
 
 describe("Test EConfig", () => {
 	beforeEach(() => {
+		// Wipe environment, no test should rely on another one or any existing stuff in the environment
+		process.env = [];
 		config = new Config(envPrefix);
 		// Clear all known ENV
 		for (const [key] of Object.entries(TEST_ENVS))
@@ -75,46 +160,26 @@ describe("Test EConfig", () => {
 
 	it("Test environment property replacing", () => {
 		setValidCore("TEST");
+		process.env["TESTSTRING"] = "REPLACESTRING";
 		// eslint-disable-next-line no-template-curly-in-string
-		process.env[TEST_ENVS.TEST_ENVIRONMENT_REPLACE("TEST")] = "USERDNSDOMAIN:${USERDNSDOMAIN}";
+		process.env[TEST_ENVS.TEST_ENVIRONMENT_REPLACE("TEST")] = "TESTSTRING:${TESTSTRING}";
 		// eslint-disable-next-line no-template-curly-in-string
-		process.env[TEST_ENVS.TEST_ENVIRONMENT_REPLACE_FAILED("TEST")] = "USERDNSDOMAIN:${USER_DNS_DOMAIN}";
+		process.env[TEST_ENVS.TEST_ENVIRONMENT_REPLACE_FAILED("TEST")] = "TESTSTRING:${TEST_STRING}";
 
-		// eslint-disable-next-line require-jsdoc
-		class TestConfig extends EConfigTemplate {
-			constructor(envPrefix) {
-				super(envPrefix, true);
-				this.config = {
-					testEnvReplace: undefined,
-					testEnvReplaceFailed: undefined
-				};
-			}
-
-			init() {
-				this.initCore();
-				this.config = {
-					testEnvReplace1: this.newEnvProperty("ENVIRONMENT_REPLACE", validators.validateStringNotEmpty()),
-					testEnvReplace2: this.newEnvProperty("ENVIRONMENT_REPLACE", validators.validateStringNotEmpty(), undefined, true),
-					testEnvReplaceFailed1: this.newEnvProperty("ENVIRONMENT_REPLACE_FAILED", validators.validateStringNotEmpty()),
-					testEnvReplaceFailed2: this.newEnvProperty("ENVIRONMENT_REPLACE_FAILED", validators.validateStringNotEmpty(), undefined, true)
-				};
-			}
-		}
-
-		const testConfig = new TestConfig("TEST");
-		testConfig.init(false);
+		const testConfig = new TestConfigReplacing();
+		testConfig.init();
 		const errors = testConfig.validate(false);
 		expect(errors).toEqual(
 			{
 				// eslint-disable-next-line no-template-curly-in-string
-				invalidPropertyValues: ["TEST_ENVIRONMENT_REPLACE_FAILED requires the following environment variable(s) ${USER_DNS_DOMAIN} which were not available."],
+				invalidPropertyValues: ["TEST_ENVIRONMENT_REPLACE_FAILED requires the following environment variable(s) ${TEST_STRING} which were not available."],
 				missingProperties: []
 			}
 		);
 
-		expect(testConfig.config.testEnvReplace1).toBe("USERDNSDOMAIN:ESTOS.DE");
-		expect(testConfig.config.testEnvReplace2).toBe("USERDNSDOMAIN:ESTOS.DE");
-		expect(testConfig.config.testEnvReplaceFailed1).toBe("USERDNSDOMAIN:");
+		expect(testConfig.config.testEnvReplace1).toBe("TESTSTRING:REPLACESTRING");
+		expect(testConfig.config.testEnvReplace2).toBe("TESTSTRING:REPLACESTRING");
+		expect(testConfig.config.testEnvReplaceFailed1).toBe("TESTSTRING:");
 		expect(testConfig.config.testEnvReplaceFailed2).toBe(null);
 	});
 
@@ -123,33 +188,8 @@ describe("Test EConfig", () => {
 		process.env.TEST_URL_VALID = "https://estos.de";
 		process.env.TEST_URL_INVALID = "ttp/est....os.de";
 
-		// eslint-disable-next-line require-jsdoc
-		class TestConfig extends EConfigTemplate {
-			constructor(envPrefix) {
-				super(envPrefix, true);
-				this.config = {
-					testValidUrl: undefined,
-					testInvalidUrl: undefined,
-					testRequiredMissing: undefined,
-					testRequiredFallback: undefined,
-					testOptional: undefined,
-					testOptionalFallback: undefined
-				};
-			}
-
-			init() {
-				this.initCore();
-				this.config = {
-					testValidUrl: this.newProperty("URL_VALID", validators.validateURL()),
-					testInvalidUrl: this.newProperty("URL_INVALID", validators.validateURL()),
-					testRequiredMissing: this.newProperty("REQUIRED_MISSING", validators.validateString()),
-					testRequiredFallback: this.newProperty("REQUIRED_MISSING_W_FALLBACK", validators.validateString(), "FALLBACK_REQUIRED")
-				};
-			}
-		}
-
-		const testConfig = new TestConfig("TEST");
-		testConfig.init(false);
+		const testConfig = new TestConfigRequiredOptional();
+		testConfig.init();
 		const errors = testConfig.validate(false);
 		expect(errors).toEqual(
 			{
@@ -185,5 +225,88 @@ describe("Test EConfig", () => {
 			const prop = template.newEnvProperty("TEST_URL_ENV_REPLACE_NOTPOSSIBLE", validators.validateString(), undefined, false);
 			expect(prop).toBe("replace::");
 		}
+	});
+
+	// Test against matching environment
+	it("Test parameter optional in production, env is production and set", () => {
+		setValidCore("TEST");
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+	});
+
+	it("Test parameter optional in production, env is production and not set", () => {
+		setValidCore("TEST");
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toBeNull();
+	});
+
+	it("Test parameter optional in production, env is production and set valid", () => {
+		setValidCore("TEST");
+		process.env[`TEST_PARAMETER`] = "true";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toBeNull();
+	});
+
+	it("Test parameter optional in production, env is production and set wrong type", () => {
+		setValidCore("TEST");
+		process.env[`TEST_PARAMETER`] = "shoudlbeboolean";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toEqual(
+			{
+				invalidPropertyValues: ['TEST_PARAMETER has to be of type "1" (true) or "0" (false), currently is (shoudlbeboolean)'],
+				missingProperties: []
+			}
+		);
+	});
+
+	// Test against not matching environment (development)
+
+	it("Test parameter optional in production, env is development and set", () => {
+		setValidCore("TEST");
+		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+	});
+
+	it("Test parameter optional in production, env is development and not set", () => {
+		setValidCore("TEST");
+		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toBeNull();
+	});
+
+	it("Test parameter optional in production, env is development and set valid", () => {
+		setValidCore("TEST");
+		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
+		process.env[`TEST_PARAMETER`] = "true";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toBeNull();
+	});
+
+	it("Test parameter optional in production, env is development and set wrong type", () => {
+		setValidCore("TEST");
+		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
+		process.env[`TEST_PARAMETER`] = "shoudlbeboolean";
+		const testConfig = new TestConfigProductionOptional();
+		testConfig.init();
+		const errors = testConfig.validate(false);
+		expect(errors).toEqual(
+			{
+				invalidPropertyValues: ['TEST_PARAMETER has to be of type "1" (true) or "0" (false), currently is (shoudlbeboolean)'],
+				missingProperties: []
+			}
+		);
 	});
 });

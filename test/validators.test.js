@@ -29,6 +29,16 @@ describe("Test Validators", () => {
 		expect(nullobject).toBe(null);
 	});
 
+	it("validateStringToUpper", () => {
+		const a = validateString("toupper")(createProp({ value: "string" }));
+		expect(a).toBe("STRING");
+	});
+
+	it("validateStringToLower", () => {
+		const a = validateString("tolower")(createProp({ value: "STRING" }));
+		expect(a).toBe("string");
+	});
+
 	it("validateStringNotEmpty", () => {
 		const a = validateStringNotEmpty()(createProp({ value: "abc" }));
 		expect(a).toBe("abc");
