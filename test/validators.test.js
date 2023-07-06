@@ -1,4 +1,7 @@
 const { validateURL, validateFolderExists, validateString, validateBoolean, validateInteger, validateStringNotEmpty, validateDate, validateFileExists, validatePartOfList, validatePort, validateStringArray, validateIPv4, validateIPv6, validateIP } = require("../lib/validators");
+const os = require("os");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Creates a test property
@@ -23,7 +26,7 @@ describe("Test Validators", () => {
 		expect(a).toBe("string");
 		const empty = validateString()(createProp({ value: "" }));
 		expect(empty).toBe("");
-		const blank = validateString()({ });
+		const blank = validateString()({});
 		expect(blank).toBe(null);
 		const nullobject = validateString()();
 		expect(nullobject).toBe(null);
@@ -46,7 +49,7 @@ describe("Test Validators", () => {
 		expect(b).toBe(null);
 		const empty = validateStringNotEmpty()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateStringNotEmpty()({ });
+		const blank = validateStringNotEmpty()({});
 		expect(blank).toBe(null);
 		const nullobject = validateStringNotEmpty()();
 		expect(nullobject).toBe(null);
@@ -62,41 +65,67 @@ describe("Test Validators", () => {
 		expect(c).toEqual(null);
 		const empty = validateDate()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateDate()({ });
+		const blank = validateDate()({});
 		expect(blank).toBe(null);
 		const nullobject = validateDate()();
 		expect(nullobject).toBe(null);
 	});
 
 	it("validateFileExists", () => {
-		const a = validateFileExists()(createProp({ value: "C:\\Windows\\System32\\kernel32.dll" }));
-		expect(a).toBe("C:\\Windows\\System32\\kernel32.dll");
-		const b = validateFileExists()(createProp({ value: "C:\\Windows\\System32" }));
+		// Positive case
+		const tmpTestFileA = path.join(os.tmpdir(), Date.now() + "testfile.tmp");
+		fs.closeSync(fs.openSync(tmpTestFileA, "w"));
+		const a = validateFileExists()(createProp({ value: tmpTestFileA }));
+		expect(a).toBe(tmpTestFileA);
+		// Directory is not a file
+		const b = validateFileExists()(createProp({ value: os.tmpdir() }));
 		expect(b).toBe(null);
-		const c = validateFileExists()(createProp({ value: "C:\\Windows\\System32\\kernel33.dll" }));
+		// File not exists
+		fs.unlinkSync(tmpTestFileA);
+		const c = validateFileExists()(createProp({ value: "" }));
 		expect(c).toBe(null);
+		// Empty value
 		const empty = validateFileExists()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateFileExists()({ });
+		// Empty prop object
+		const blank = validateFileExists()({});
 		expect(blank).toBe(null);
+		// Undefined prop
 		const nullobject = validateFileExists()();
 		expect(nullobject).toBe(null);
 	});
 
 	it("validateFolderExists", () => {
-		const a = validateFolderExists()(createProp({ value: "C:\\Windows\\System32" }));
-		expect(a).toBe("C:\\Windows\\System32");
-		const b = validateFolderExists()(createProp({ value: "C:\\Windows\\System32\\" }));
-		expect(b).toBe("C:\\Windows\\System32");
-		const c = validateFolderExists()(createProp({ value: "C:\\Windows\\System23" }));
+		const tmpTestDirA = path.join(os.tmpdir(), Date.now() + "testdir");
+		fs.mkdirSync(tmpTestDirA);
+		const tmpTestFileA = path.join(tmpTestDirA, Date.now() + "testfile.tmp");
+		fs.closeSync(fs.openSync(tmpTestFileA, "w"));
+
+		// Positive without path separator suffix
+		const a = validateFolderExists()(createProp({ value: tmpTestDirA }));
+		expect(a).toBe(tmpTestDirA);
+
+		// Positive With path separator suffix
+		const b = validateFolderExists()(createProp({ value: tmpTestDirA + path.sep }));
+		expect(b).toBe(tmpTestDirA);
+
+		// Is a file not a folder
+		const c = validateFolderExists()(createProp({ value: tmpTestFileA }));
 		expect(c).toBe(null);
-		const d = validateFolderExists()(createProp({ value: "C:\\Windows\\System32\\kernel32.dll" }));
+
+		// Is a file which not exists
+		fs.unlinkSync(tmpTestFileA);
+		const d = validateFolderExists()(createProp({ value: tmpTestFileA }));
 		expect(d).toBe(null);
-		const e = validateFolderExists()(createProp({ value: "C:\\Windows\\System32\\kernel33.dll" }));
+
+		// Folder not exists
+		fs.rmdirSync(tmpTestDirA);
+		const e = validateFolderExists()(createProp({ value: tmpTestDirA }));
 		expect(e).toBe(null);
+
 		const empty = validateFolderExists()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateFolderExists()({ });
+		const blank = validateFolderExists()({});
 		expect(blank).toBe(null);
 		const nullobject = validateFolderExists()();
 		expect(nullobject).toBe(null);
@@ -111,7 +140,7 @@ describe("Test Validators", () => {
 		expect(c).toBe(null);
 		const empty = validateURL()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateURL()({ });
+		const blank = validateURL()({});
 		expect(blank).toBe(null);
 		const nullobject = validateURL()();
 		expect(nullobject).toBe(null);
@@ -130,7 +159,7 @@ describe("Test Validators", () => {
 		expect(e).toBe(null);
 		const empty = validateBoolean()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateBoolean()({ });
+		const blank = validateBoolean()({});
 		expect(blank).toBe(null);
 		const nullobject = validateBoolean()();
 		expect(nullobject).toBe(null);
@@ -144,7 +173,7 @@ describe("Test Validators", () => {
 		expect(b).toBe(null);
 		const empty = validatePartOfList()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validatePartOfList()({ });
+		const blank = validatePartOfList()({});
 		expect(blank).toBe(null);
 		const nullobject = validatePartOfList()();
 		expect(nullobject).toBe(null);
@@ -163,7 +192,7 @@ describe("Test Validators", () => {
 		expect(e).toBe(3);
 		const empty = validateInteger()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateInteger()({ });
+		const blank = validateInteger()({});
 		expect(blank).toBe(null);
 		const nullobject = validateInteger()();
 		expect(nullobject).toBe(null);
@@ -182,7 +211,7 @@ describe("Test Validators", () => {
 		expect(e).toBe(null);
 		const empty = validatePort()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validatePort()({ });
+		const blank = validatePort()({});
 		expect(blank).toBe(null);
 		const nullobject = validatePort()();
 		expect(nullobject).toBe(null);
@@ -205,7 +234,7 @@ describe("Test Validators", () => {
 		expect(g).toBe(null);
 		const empty = validateIPv4()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateIPv4()({ });
+		const blank = validateIPv4()({});
 		expect(blank).toBe(null);
 		const nullobject = validateIPv4()();
 		expect(nullobject).toBe(null);
@@ -226,7 +255,7 @@ describe("Test Validators", () => {
 		expect(g).toBe(null);
 		const empty = validateIPv6()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateIPv6()({ });
+		const blank = validateIPv6()({});
 		expect(blank).toBe(null);
 		const nullobject = validateIPv6()();
 		expect(nullobject).toBe(null);
@@ -252,7 +281,7 @@ describe("Test Validators", () => {
 		expect(d).toBe(null);
 		const empty = validateStringArray()(createProp({ value: "" }));
 		expect(empty).toBe(null);
-		const blank = validateStringArray()({ });
+		const blank = validateStringArray()({});
 		expect(blank).toBe(null);
 		const nullobject = validateStringArray()();
 		expect(nullobject).toBe(null);
