@@ -1,3 +1,5 @@
+[![Node.js CI](https://github.com/ESTOS/ucconfig/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/ESTOS/ucconfig/actions/workflows/node.js.yml)
+
 # Universal environment based settings module
 
 The module offers an easy to use interface to access validated settings provided via the environment.
