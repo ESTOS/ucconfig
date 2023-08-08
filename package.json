@@ -1,6 +1,6 @@
 {
-	"name": "ucconfig",
-	"version": "0.0.4",
+	"name": "@estos/ucconfig",
+	"version": "0.0.5",
 	"description": "Environment based config support library",
 	"main": "index.js",
 	"engines": {
