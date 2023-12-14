@@ -13,7 +13,7 @@ const envPrefix = "ECONF";
  */
 class Config extends EConfigTemplate {
 	constructor() {
-		super(envPrefix, true);
+		super(envPrefix, undefined, true);
 	}
 
 	init() {
@@ -26,7 +26,7 @@ class Config extends EConfigTemplate {
  */
 class TestConfigReplacing extends EConfigTemplate {
 	constructor() {
-		super("TEST", true);
+		super("TEST", undefined, true);
 		this.config = {
 			testEnvReplace: undefined,
 			testEnvReplaceFailed: undefined
@@ -49,7 +49,7 @@ class TestConfigReplacing extends EConfigTemplate {
  */
 class TestConfigRequiredOptional extends EConfigTemplate {
 	constructor() {
-		super("TEST", true);
+		super("TEST", undefined, true);
 		this.config = {
 			testValidUrl: undefined,
 			testInvalidUrl: undefined,
@@ -76,8 +76,9 @@ class TestConfigRequiredOptional extends EConfigTemplate {
  */
 class TestConfigProductionOptional extends EConfigTemplate {
 	constructor() {
-		super("TEST", true);
+		super("TEST", undefined, true);
 	}
+
 	init() {
 		this.initCore();
 		this.config = {
@@ -91,8 +92,9 @@ class TestConfigProductionOptional extends EConfigTemplate {
  */
 class TestConfigLocalDevelopmentOptional extends EConfigTemplate {
 	constructor() {
-		super("TEST", true);
+		super("TEST", undefined, true);
 	}
+
 	init() {
 		this.initCore();
 		this.config = {
@@ -100,7 +102,6 @@ class TestConfigLocalDevelopmentOptional extends EConfigTemplate {
 		};
 	}
 }
-
 
 const TEST_ENVS = {
 	VERSION_BUILD_DATE: (envPrefix) => `${envPrefix}_VERSION_BUILD_DATE`,
@@ -160,7 +161,7 @@ describe("Test EConfig", () => {
 
 	it("Test environment property replacing", () => {
 		setValidCore("TEST");
-		process.env["TESTSTRING"] = "REPLACESTRING";
+		process.env.TESTSTRING = "REPLACESTRING";
 		// eslint-disable-next-line no-template-curly-in-string
 		process.env[TEST_ENVS.TEST_ENVIRONMENT_REPLACE("TEST")] = "TESTSTRING:${TESTSTRING}";
 		// eslint-disable-next-line no-template-curly-in-string
@@ -212,7 +213,7 @@ describe("Test EConfig", () => {
 		// eslint-disable-next-line no-template-curly-in-string
 		process.env.TEST_URL_ENV_REPLACE_NOTPOSSIBLE = "replace:${TEST_URL_ENV_REPLACER_NOT_EXISTING_1}:${TEST_URL_ENV_REPLACER_NOT_EXISTING_2}";
 		process.env.TEST_URL_ENV_REPLACER = "it";
-		const template = new EConfigTemplate(undefined, true);
+		const template = new EConfigTemplate(undefined, undefined, true);
 		{
 			const prop = template.newEnvProperty("TEST_URL_ENV_REPLACE_POSSIBLE", validators.validateString(), undefined, true);
 			expect(prop).toBe("replace:it");
@@ -245,7 +246,7 @@ describe("Test EConfig", () => {
 
 	it("Test parameter optional in production, env is production and set valid", () => {
 		setValidCore("TEST");
-		process.env[`TEST_PARAMETER`] = "true";
+		process.env.TEST_PARAMETER = "true";
 		const testConfig = new TestConfigProductionOptional();
 		testConfig.init();
 		const errors = testConfig.validate(false);
@@ -254,13 +255,13 @@ describe("Test EConfig", () => {
 
 	it("Test parameter optional in production, env is production and set wrong type", () => {
 		setValidCore("TEST");
-		process.env[`TEST_PARAMETER`] = "shoudlbeboolean";
+		process.env.TEST_PARAMETER = "shoudlbeboolean";
 		const testConfig = new TestConfigProductionOptional();
 		testConfig.init();
 		const errors = testConfig.validate(false);
 		expect(errors).toEqual(
 			{
-				invalidPropertyValues: ['TEST_PARAMETER has to be of type "1" (true) or "0" (false), currently is (shoudlbeboolean)'],
+				invalidPropertyValues: ["TEST_PARAMETER has to be of type \"1\" (true) or \"0\" (false), currently is (shoudlbeboolean)"],
 				missingProperties: []
 			}
 		);
@@ -288,7 +289,7 @@ describe("Test EConfig", () => {
 	it("Test parameter optional in production, env is development and set valid", () => {
 		setValidCore("TEST");
 		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
-		process.env[`TEST_PARAMETER`] = "true";
+		process.env.TEST_PARAMETER = "true";
 		const testConfig = new TestConfigProductionOptional();
 		testConfig.init();
 		const errors = testConfig.validate(false);
@@ -298,13 +299,13 @@ describe("Test EConfig", () => {
 	it("Test parameter optional in production, env is development and set wrong type", () => {
 		setValidCore("TEST");
 		process.env[`${envPrefix}_ENVIRONMENT`] = "development";
-		process.env[`TEST_PARAMETER`] = "shoudlbeboolean";
+		process.env.TEST_PARAMETER = "shoudlbeboolean";
 		const testConfig = new TestConfigProductionOptional();
 		testConfig.init();
 		const errors = testConfig.validate(false);
 		expect(errors).toEqual(
 			{
-				invalidPropertyValues: ['TEST_PARAMETER has to be of type "1" (true) or "0" (false), currently is (shoudlbeboolean)'],
+				invalidPropertyValues: ["TEST_PARAMETER has to be of type \"1\" (true) or \"0\" (false), currently is (shoudlbeboolean)"],
 				missingProperties: []
 			}
 		);

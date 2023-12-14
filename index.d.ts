@@ -26,10 +26,9 @@ export declare class EConfigProperty {
 	public envName: string;
 	public isRequired: boolean;
 	public value: string | undefined;
-	public errorUndefined: boolean;
+	public defaultValue: string | undefined;
+	public errorMissing: boolean;
 	public errorInvalid: string | undefined;
-	public constructor(envName: string, isRequired: boolean, value?: string, validator?: (key: string, value: string) => string | null);
-	public init(env: NodeJS.ProcessEnv): string | null;
 }
 
 /**
@@ -54,7 +53,13 @@ export declare class EConfigPropertyOptional {
  * Represents a config item
  */
 export declare class EConfigTemplate {
-	protected constructor(envPrefix?: string);
+	/**
+	 * Creates the EConfigTemplate class
+	 *
+	 * @param envPrefix - a prefix which is used to search for variables in the env. The prefix is added with following _
+	 * @param env - A custom env container which might be usefull if we don´t use process.env (which is the default if nothing has been specified)
+	 */
+	protected constructor(envPrefix?: string, env?: Dict<string>);
 	protected coreConfig: ICoreConfig;
 	protected initCore(): void;
 
