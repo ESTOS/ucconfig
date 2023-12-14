@@ -3,7 +3,7 @@ const EConfigProperty = require("../lib/eConfigProperty");
 describe("Test eConfigProperty", () => {
 	it("required existing env", () => {
 		process.env.EXISTING = "exists";
-		const prop = new EConfigProperty("EXISTING");
+		const prop = new EConfigProperty(process.env, "EXISTING");
 		expect(prop.isRequired).toBe(true);
 		expect(prop.defaultValue).toBe(undefined);
 		expect(prop.value).toBe("exists");
@@ -11,7 +11,7 @@ describe("Test eConfigProperty", () => {
 		expect(prop.errorInvalid).toBe(undefined);
 	});
 	it("required non existing env", () => {
-		const prop = new EConfigProperty("NOT_EXISTING");
+		const prop = new EConfigProperty(process.env, "NOT_EXISTING");
 		expect(prop.isRequired).toBe(true);
 		expect(prop.defaultValue).toBe(undefined);
 		expect(prop.value).toBe(undefined);
@@ -20,7 +20,7 @@ describe("Test eConfigProperty", () => {
 	});
 	it("optional existing env", () => {
 		process.env.EXISTING = "exists";
-		const prop = new EConfigProperty("EXISTING", "defaultexists");
+		const prop = new EConfigProperty(process.env, "EXISTING", "defaultexists");
 		expect(prop.isRequired).toBe(false);
 		expect(prop.defaultValue).toBe("defaultexists");
 		expect(prop.value).toBe("exists");
@@ -28,7 +28,7 @@ describe("Test eConfigProperty", () => {
 		expect(prop.errorInvalid).toBe(undefined);
 	});
 	it("optional non existing env", () => {
-		const prop = new EConfigProperty("NOT_EXISTING", "defaultnotexists");
+		const prop = new EConfigProperty(process.env, "NOT_EXISTING", "defaultnotexists");
 		expect(prop.isRequired).toBe(false);
 		expect(prop.defaultValue).toBe("defaultnotexists");
 		expect(prop.value).toBe(undefined);
