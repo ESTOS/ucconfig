@@ -59,7 +59,7 @@ export declare class EConfigTemplate {
 	 * @param envPrefix - a prefix which is used to search for variables in the env. The prefix is added with following _
 	 * @param env - A custom env container which might be usefull if we don´t use process.env (which is the default if nothing has been specified)
 	 */
-	protected constructor(envPrefix?: string, env?: Dict<string>);
+	protected constructor(envPrefix?: string, env?: { [id: string]: string });
 	protected coreConfig: ICoreConfig;
 	protected initCore(): void;
 
